@@ -5,7 +5,7 @@ import path from "path";
 const scrollInfiniteItems = async (page) => {
     let lastScrollHeight = 0;
     let noNewContentCount = 0;
-    const MAX_NO_NEW_CONTENT = 7;
+    const MAX_NO_NEW_CONTENT = 1;
 
     while (true) {
         await page.evaluate(() => {
@@ -28,7 +28,7 @@ const scrollInfiniteItems = async (page) => {
         }
         lastScrollHeight = currentScrollHeight;
 
-        const loadMoreResult = await page.evaluate(() => {
+        await page.evaluate(() => {
             const loadMoreButton = document.querySelector('.js-load-more');
             if (loadMoreButton) {
                 const style = window.getComputedStyle(loadMoreButton);
@@ -55,62 +55,68 @@ export default async function openWebPage(url) {
         headless: false,
     });
     try {
-        const page = await browser.newPage();
-        await page.setViewport({ width: 1080, height: 1024 });
-        await page.goto(url, { waitUntil: 'networkidle2' });
+        const directory = `data/${url.name}`;
+        await fs.mkdir(directory, { recursive: true });
 
-        await scrollInfiniteItems(page);
+        for (const urlPage of url.urls) {
+            const page = await browser.newPage();
+            await page.setViewport({ width: 1080, height: 1024 });
+            await page.goto(urlPage, { waitUntil: 'networkidle2' });
 
-        const productData = await page.evaluate(() => {
-            const productContainers = document.querySelectorAll('.js-item-product');
+            await scrollInfiniteItems(page);
 
-            return [...productContainers].map(productContainer => {
-                const title = productContainer.querySelector('.js-item-name')?.textContent.trim();
-                const price = productContainer.querySelector('.js-price-display')?.textContent.trim();
-                const discountPrice = productContainer.querySelector('.js-payment-discount-price-product')?.textContent.trim();
-                const installments = productContainer.querySelector('.js-installment-price')?.textContent.trim();
-                const productLink = productContainer.querySelector('.item-link')?.getAttribute('href');
+            const productData = await page.evaluate(() => {
+                const productContainers = document.querySelectorAll('.js-item-product');
 
-                const imageContainer = productContainer.querySelector('.item-image img');
-                const primaryImageSrc = imageContainer?.getAttribute('data-srcset') || imageContainer?.getAttribute('srcset');
+                return [...productContainers].map(productContainer => {
+                    const title = productContainer.querySelector('.js-item-name')?.textContent.trim();
+                    const price = productContainer.querySelector('.js-price-display')?.textContent.trim();
+                    const discountPrice = productContainer.querySelector('.js-payment-discount-price-product')?.textContent.trim();
+                    const installments = productContainer.querySelector('.js-installment-price')?.textContent.trim();
+                    const productLink = productContainer.querySelector('.item-link')?.getAttribute('href');
 
-                const sizes = [...productContainer.querySelectorAll('.js-insta-variant')].map(variant => ({
-                    size: variant.getAttribute('data-option'),
-                    selected: variant.classList.contains('selected'),
-                }));
+                    const imageContainer = productContainer.querySelector('.item-image img');
+                    const primaryImageSrc = imageContainer?.getAttribute('data-srcset') || imageContainer?.getAttribute('srcset');
 
-                const color = productContainer.querySelector('.js-color-variants-container .js-insta-variant')?.getAttribute('data-option');
+                    const sizes = [...productContainer.querySelectorAll('.js-insta-variant')].map(variant => ({
+                        size: variant.getAttribute('data-option'),
+                        selected: variant.classList.contains('selected'),
+                    }));
 
-                return {
-                    title,
-                    price,
-                    discountPrice,
-                    installments,
-                    productLink,
-                    images: {
-                        primary: primaryImageSrc,
-                    },
-                    sizes,
-                    color
-                };
+                    const color = productContainer.querySelector('.js-color-variants-container .js-insta-variant')?.getAttribute('data-option');
+
+                    return {
+                        title,
+                        price,
+                        discountPrice,
+                        installments,
+                        productLink,
+                        images: {
+                            primary: primaryImageSrc,
+                        },
+                        sizes,
+                        color
+                    };
+                });
             });
-        });
 
-        if (productData && productData.length > 0) {
-            const sanitizedFileName = url.replace(/https?:\/\//, "").replace(/\//g, "_") + ".json";
-            const directory = "data";
+            if (productData && productData.length > 0) {
+                const sanitizedFileName = `${sanitizeFileName(urlPage)}.json`;
 
-            await fs.mkdir(directory, { recursive: true });
-            const filePath = path.join(directory, sanitizedFileName);
+                const filePath = path.join(directory, sanitizedFileName);
 
-            await fs.writeFile(filePath, JSON.stringify(productData, null, 2));
-            console.log(`Saved ${productData.length} products for ${url} to ${filePath}`);
-        } else {
-            console.error(`No product data found for ${url}`);
+                await fs.writeFile(filePath, JSON.stringify(productData, null, 2));
+                console.log(`Saved ${productData.length} products for ${urlPage} to ${filePath}`);
+            } else {
+                console.error(`No product data found for ${urlPage}`);
+            }
         }
     } catch (error) {
-        console.error(`Error processing ${url}:`, error);
+        console.error(`Error processing ${url.name}:`, error);
     } finally {
         await browser.close();
     }
 }
+const sanitizeFileName = (url) => {
+    return url.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+};

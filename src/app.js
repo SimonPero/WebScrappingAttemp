@@ -6,10 +6,36 @@ import { fileURLToPath } from 'url';
 
 const app = express()
 const PORT = 8080
-const urls = [
-    "https://www.keito.com.ar/productos",
-    "https://www.benka.com.ar/productos",
-    "https://www.orsobianco.com.ar/productos"
+const pages = [
+    {
+        name: "keito.com.ar",
+        urls: ["https://www.keito.com.ar/productos"]
+    },
+    {
+        name: "benka.com.ar",
+        urls: ["https://www.benka.com.ar/productos"]
+    },
+    {
+        name: "orsobianco.com.ar",
+        urls: ["https://www.orsobianco.com.ar/productos"]
+    },
+    {
+        name: "kill.com.ar",
+        urls: [
+            "https://www.kill.com.ar/summer-25",
+            "https://www.kill.com.ar/premium-outlet/",
+            "https://www.kill.com.ar/carteras/",
+            "https://www.kill.com.ar/likillda1"
+        ]
+    },
+    {
+        name: "zhoue.com.ar",
+        urls: [
+            "https://www.zhoue.com.ar/invierno-2024/denim3",
+            "https://www.zhoue.com.ar/verano-2025/",
+            "https://www.zhoue.com.ar/invierno-2024",
+        ]
+    }
 ];
 
 
@@ -20,8 +46,8 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 
 app.get("/cargarDatos", async (req, res) => {
-    async function webScrap(){
-        const promises = urls.map(url => openWebPage(url));
+    async function webScrap() {
+        const promises = pages.map(url => openWebPage(url));
         await Promise.all(promises);
     }
     try {
