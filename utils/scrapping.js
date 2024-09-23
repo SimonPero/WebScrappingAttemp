@@ -52,7 +52,7 @@ const scrollInfiniteItems = async (page) => {
 
 export default async function openWebPage(url) {
     const browser = await puppeteer.launch({
-        headless: false,
+        headless: true,
     });
     try {
         const directory = `data/${url.name}`;
