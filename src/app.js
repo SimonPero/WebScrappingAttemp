@@ -30,13 +30,23 @@ const pages = [
         ]
     },
     {
-        name: "zhoue.com.ar",
+        name: "siemprealtopcipolletti.com",
         urls: [
-            "https://www.zhoue.com.ar/invierno-2024/denim3",
-            "https://www.zhoue.com.ar/verano-2025/",
-            "https://www.zhoue.com.ar/invierno-2024",
+            "https://www.siemprealtopcipolletti.com/mujer2"
         ]
-    }
+    },
+    {
+        name: "yutte.com.ar",
+        urls: [
+            "https://www.yutte.com.ar/productos/"
+        ]
+    },
+    {
+        name: "yutte.com.ar",
+        urls: [
+            "https://www.yutte.com.ar/productos/"
+        ]
+    },
 ];
 
 

@@ -75,12 +75,18 @@ export default async function openWebPage(url) {
                     const installments = productContainer.querySelector('.js-installment-price')?.textContent.trim();
                     const productLink = productContainer.querySelector('.item-link')?.getAttribute('href');
 
-                    const imageContainer = productContainer.querySelector('.item-image img');
-                    const primaryImageSrc = imageContainer?.getAttribute('data-srcset') || imageContainer?.getAttribute('srcset');
+                    let imageContainer = productContainer.querySelector('.item-image img');
+                    if (!imageContainer) {
+                        imageContainer = productContainer.querySelector('.item-image');
+                    }
+                    let primaryImageSrc = imageContainer?.getAttribute('srcset');
+                    let firstUrl = null;
 
+                    if (primaryImageSrc) {
+                        firstUrl = primaryImageSrc.split(", ")[0].split(" ")[0];
+                    }
                     const sizes = [...productContainer.querySelectorAll('.js-insta-variant')].map(variant => ({
                         size: variant.getAttribute('data-option'),
-                        selected: variant.classList.contains('selected'),
                     }));
 
                     const color = productContainer.querySelector('.js-color-variants-container .js-insta-variant')?.getAttribute('data-option');
@@ -92,7 +98,7 @@ export default async function openWebPage(url) {
                         installments,
                         productLink,
                         images: {
-                            primary: primaryImageSrc,
+                            primary: firstUrl || "No image available",
                         },
                         sizes,
                         color
